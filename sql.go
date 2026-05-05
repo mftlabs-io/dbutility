@@ -2,7 +2,6 @@ package dbutility
 
 import (
 	"amfui/utilities"
-	"fmt"
 	"amfui/dbconnector"
 )
 
@@ -28,7 +27,6 @@ func (util *DbUtil) DeleteHistory(context utilities.AppContext,Db *dbconnector.D
 			return err
 		}
 		rowcount,_ := resp.RowsAffected()
-		fmt.Printf("Delete response for %v is: %v\n",tablename,rowcount)
 		//context.Logger.Info("Delete query for %v is: %v\n",tablename,query)
 		context.Logger.Info("Delete response for %v is: %v\n",tablename,rowcount)
 	} else {
@@ -39,7 +37,6 @@ func (util *DbUtil) DeleteHistory(context utilities.AppContext,Db *dbconnector.D
 		}
 		rowcount,_ := resp.RowsAffected()
 		//context.Logger.Info("Delete query for %v is: %v\n",tablename,query)
-		fmt.Printf("Delete response for %v is: %v\n",tablename,rowcount)
 		context.Logger.Info("Delete response for %v is: %v\n",tablename,rowcount)
 	}
 
@@ -51,12 +48,10 @@ func (util *DbUtil) InsertToHistoryTable(context utilities.AppContext,Db *dbconn
 		Query := INSERT_INTO_MESSAGE_HISTORY+SELECT_MESSAGES+" where create_time <= $1"
 		context.Logger.Info("Insert query for %v is: %v\n",tablename,Query)
 		resp, err := Db.Exec(Query,then)
-		fmt.Printf("resp type:%T",resp)
 		if err != nil{
 			return err
 		}
 		rowcount,_ := resp.RowsAffected()
-		fmt.Printf("response for adding data to %v is: %v\n",tablename,rowcount)
 		context.Logger.Info("response for adding data to %v is: %v\n",tablename,rowcount)
 	} else if tablename == "amf_session_history"{
 		Query := INSERT_INTO_SESSION_HISTORY+SELECT_SESSIONS+" where create_time <= $1"
@@ -66,7 +61,6 @@ func (util *DbUtil) InsertToHistoryTable(context utilities.AppContext,Db *dbconn
 			return err
 		}
 		rowcount,_ := resp.RowsAffected()
-		fmt.Printf("response for adding data to %v is: %v\n",tablename,rowcount)
 		context.Logger.Info("response for adding data to %v is: %v\n",tablename,rowcount)
 	} else if tablename == "amf_session_rel_history"{
 		Query := INSERT_INTO_SESSION_REL_HISTORY+SELECT_SESSION_REL+" where create_time <= $1"
@@ -76,7 +70,6 @@ func (util *DbUtil) InsertToHistoryTable(context utilities.AppContext,Db *dbconn
 			return err
 		}
 		rowcount,_ := resp.RowsAffected()
-		fmt.Printf("response for adding data to %v is: %v\n",tablename,rowcount)
 		context.Logger.Info("response for adding data to %v is: %v\n",tablename,rowcount)
 	} else if tablename == "amf_event_history"{
 		Query := INSERT_INTO_EVENT_HISTORY+SELECT_EVENT+" where create_time <= $1"
@@ -86,7 +79,6 @@ func (util *DbUtil) InsertToHistoryTable(context utilities.AppContext,Db *dbconn
 			return err
 		}
 		rowcount,_ := resp.RowsAffected()
-		fmt.Printf("response for adding data to %v is: %v\n",tablename,rowcount)
 		context.Logger.Info("response for adding data to %v is: %v\n",tablename,rowcount)
 	}
 	return nil
@@ -98,12 +90,10 @@ func (util *DbUtil) InsertLastMonthHistory(context utilities.AppContext,Db *dbco
 		Query := INSERT_INTO_MESSAGE_HISTORY+SELECT_MESSAGES+whereClause
 		context.Logger.Info("Insert query for %v is: %v\n",tablename,Query)
 		resp, err := Db.Exec(Query)
-		fmt.Printf("resp type:%T",resp)
 		if err != nil{
 			return err
 		}
 		rowcount,_ := resp.RowsAffected()
-		fmt.Printf("response for adding data to %v is: %v\n",tablename,rowcount)
 		context.Logger.Info("response for adding data to %v is: %v\n",tablename,rowcount)
 	} else if tablename == "amf_session_history"{
 		whereClause := " where create_time >= '"+last14daydate+"' and create_time <= '"+presentDate+"'"
@@ -114,7 +104,6 @@ func (util *DbUtil) InsertLastMonthHistory(context utilities.AppContext,Db *dbco
 			return err
 		}
 		rowcount,_ := resp.RowsAffected()
-		fmt.Printf("response for adding data to %v is: %v\n",tablename,rowcount)
 		context.Logger.Info("response for adding data to %v is: %v\n",tablename,rowcount)
 	} else if tablename == "amf_session_rel_history"{
 		whereClause := " where create_time >= '"+last14daydate+"' and create_time <= '"+presentDate+"'"
@@ -125,7 +114,6 @@ func (util *DbUtil) InsertLastMonthHistory(context utilities.AppContext,Db *dbco
 			return err
 		}
 		rowcount,_ := resp.RowsAffected()
-		fmt.Printf("response for adding data to %v is: %v\n",tablename,rowcount)
 		context.Logger.Info("response for adding data to %v is: %v\n",tablename,rowcount)
 	} else if tablename == "amf_event_history"{
 		whereClause := " where create_time >= '"+last14daydate+"' and create_time <= '"+presentDate+"'"
@@ -136,7 +124,6 @@ func (util *DbUtil) InsertLastMonthHistory(context utilities.AppContext,Db *dbco
 			return err
 		}
 		rowcount,_ := resp.RowsAffected()
-		fmt.Printf("response for adding data to %v is: %v\n",tablename,rowcount)
 		context.Logger.Info("response for adding data to %v is: %v\n",tablename,rowcount)
 	}
 	return nil
@@ -182,7 +169,7 @@ func (util *DbUtil) CheckDistinctSenderWithCount (context utilities.AppContext,D
 				//return 0, err
 			}
 			context.Logger.Info("Sender :%v with Count: %v from %v\n",sender,count,tablename)
-			fmt.Printf("Sender :%v with Count: %v from %v\n",sender,count,tablename)
+			context.Logger.Info("CheckDistinctSenderWithCount: sender=%v count=%v table=%v", sender, count, tablename)
 
 		}
 	} else {
@@ -200,7 +187,7 @@ func (util *DbUtil) CheckDistinctSenderWithCount (context utilities.AppContext,D
 				//return 0, err
 			}
 			context.Logger.Info("Sender :%v with Count: %v from %v\n",sender,count,tablename)
-			fmt.Printf("Sender :%v with Count: %v from %v\n",sender,count,tablename)
+			context.Logger.Info("CheckDistinctSenderWithCount: sender=%v count=%v table=%v", sender, count, tablename)
 		}
 	}
 }
@@ -221,7 +208,7 @@ func (util *DbUtil) CheckDistinctReceiverWithCount (context utilities.AppContext
 				//return 0, err
 			}
 			context.Logger.Info("Receiver :%v with Count: %v from %v\n",receiver,count,tablename)
-			fmt.Printf("Receiver :%v with Count: %v from %v\n",receiver,count,tablename)
+			context.Logger.Info("CheckDistinctReceiverWithCount: receiver=%v count=%v table=%v", receiver, count, tablename)
 
 		}
 	} else {
@@ -239,7 +226,7 @@ func (util *DbUtil) CheckDistinctReceiverWithCount (context utilities.AppContext
 				//return 0, err
 			}
 			context.Logger.Info("Receiver :%v with Count: %v from %v\n",receiver,count,tablename)
-			fmt.Printf("Receiver :%v with Count: %v from %v\n",receiver,count,tablename)
+			context.Logger.Info("CheckDistinctReceiverWithCount: receiver=%v count=%v table=%v", receiver, count, tablename)
 		}
 	}
 }
