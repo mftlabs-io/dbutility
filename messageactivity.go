@@ -94,6 +94,8 @@ func (util *DbUtil) RangeAll(context utilities.AppContext, Db *dbconnector.DbCon
 	context.Logger.Info("Date range is: %v\n", last14daydate)
 	count, cmerr := util.CheckCount(context, Db, "amf_message", "", last14daydate)
 	if cmerr != nil {
+		// SEC-010: CheckCount is informational only; log + continue so cleanup can proceed
+		context.Logger.Warn("RangeAll: CheckCount(amf_message) failed: %v", cmerr)
 	}
 	context.Logger.Info("Count from message table is: %v\n", count)
 	err := util.InsertToHistoryTable(context, Db, last14daydate, "amf_message_history")
@@ -110,11 +112,15 @@ func (util *DbUtil) RangeAll(context utilities.AppContext, Db *dbconnector.DbCon
 	time.Sleep(5 * time.Second)
 	scount, cserr := util.CheckCount(context, Db, "amf_session", "", last14daydate)
 	if cserr != nil {
+		context.Logger.Warn("RangeAll: CheckCount(amf_session) failed: %v", cserr)
 	}
 	context.Logger.Info("Count from session table is: %v\n", scount)
 	serr := util.InsertToHistoryTable(context, Db, last14daydate, "amf_session_history")
 	if serr != nil {
-		if strings.Contains(err.Error(), "duplicate key value") {
+		// SEC-010 + nil-deref fix: original checked err.Error() but err is guaranteed nil here
+		// (returned at L100-107 above otherwise) — calling .Error() on nil error panics on
+		// the very-common duplicate-key path. Use serr.Error() (the actual session-block error).
+		if strings.Contains(serr.Error(), "duplicate key value") {
 			context.Logger.Info("Duplicate key exists in session table%v", serr)
 			return serr
 		} else {
@@ -126,11 +132,13 @@ func (util *DbUtil) RangeAll(context utilities.AppContext, Db *dbconnector.DbCon
 	time.Sleep(5 * time.Second)
 	srcount, csrerr := util.CheckCount(context, Db, "amf_session_rel", "", last14daydate)
 	if csrerr != nil {
+		context.Logger.Warn("RangeAll: CheckCount(amf_session_rel) failed: %v", csrerr)
 	}
 	context.Logger.Info("Count from session relation table is: %v\n", srcount)
 	srerr := util.InsertToHistoryTable(context, Db, last14daydate, "amf_session_rel_history")
 	if srerr != nil {
-		if strings.Contains(err.Error(), "duplicate key value") {
+		// SEC-010 + nil-deref fix: see comment in session block above; use srerr.Error()
+		if strings.Contains(srerr.Error(), "duplicate key value") {
 			context.Logger.Info("Duplicate key exists in session rel table%v", srerr)
 			return srerr
 		} else {
@@ -141,11 +149,13 @@ func (util *DbUtil) RangeAll(context utilities.AppContext, Db *dbconnector.DbCon
 	time.Sleep(5 * time.Second)
 	ercount, ceerr := util.CheckCount(context, Db, "amf_event", "", last14daydate)
 	if ceerr != nil {
+		context.Logger.Warn("RangeAll: CheckCount(amf_event) failed: %v", ceerr)
 	}
 	context.Logger.Info("Count from event table is: %v\n", ercount)
 	eerr := util.InsertToHistoryTable(context, Db, last14daydate, "amf_event_history")
 	if eerr != nil {
-		if strings.Contains(err.Error(), "duplicate key value") {
+		// SEC-010 + nil-deref fix: see comment in session block above; use eerr.Error()
+		if strings.Contains(eerr.Error(), "duplicate key value") {
 			context.Logger.Info("Duplicate key exists in event table%v", eerr)
 			return eerr
 		} else {
@@ -159,6 +169,8 @@ func (util *DbUtil) RangeAll(context utilities.AppContext, Db *dbconnector.DbCon
 func (util *DbUtil) WithinRange(context utilities.AppContext, Db *dbconnector.DbConnector, startdate, enddate string) error {
 	count, cmerr := util.CheckCount(context, Db, "amf_message", startdate, enddate)
 	if cmerr != nil {
+		// SEC-010: CheckCount is informational only; log + continue so cleanup can proceed
+		context.Logger.Warn("WithinRange: CheckCount(amf_message) failed: %v", cmerr)
 	}
 	context.Logger.Info("Count from message table is: %v\n", count)
 	err := util.InsertLastMonthHistory(context, Db, startdate, enddate, "amf_message_history")
@@ -174,27 +186,32 @@ func (util *DbUtil) WithinRange(context utilities.AppContext, Db *dbconnector.Db
 	time.Sleep(5 * time.Second)
 	scount, cserr := util.CheckCount(context, Db, "amf_session", startdate, enddate)
 	if cserr != nil {
+		context.Logger.Warn("WithinRange: CheckCount(amf_session) failed: %v", cserr)
 	}
 	context.Logger.Info("Count from session table is: %v\n", scount)
 	serr := util.InsertLastMonthHistory(context, Db, startdate, enddate, "amf_session_history")
 	if serr != nil {
-		if strings.Contains(err.Error(), "duplicate key value") {
+		// SEC-010 + nil-deref fix: original checked err.Error() but err is guaranteed nil here
+		// (returned at the message-block otherwise) — would panic on duplicate-key path. Use serr.
+		if strings.Contains(serr.Error(), "duplicate key value") {
 			context.Logger.Info("Duplicate key exists in session table%v", serr)
 			return serr
 		} else {
-			context.Logger.Info("error when inserting session history record%v\n", err)
+			context.Logger.Info("error when inserting session history record%v\n", serr)
 			return serr
 		}
 	}
 	time.Sleep(5 * time.Second)
 	srcount, csrerr := util.CheckCount(context, Db, "amf_session_rel", startdate, enddate)
 	if csrerr != nil {
+		context.Logger.Warn("WithinRange: CheckCount(amf_session_rel) failed: %v", csrerr)
 	}
 	context.Logger.Info("Count from session relation table is: %v\n", srcount)
 
 	srerr := util.InsertLastMonthHistory(context, Db, startdate, enddate, "amf_session_rel_history")
 	if srerr != nil {
-		if strings.Contains(err.Error(), "duplicate key value") {
+		// SEC-010 + nil-deref fix: see comment in session block above; use srerr.Error()
+		if strings.Contains(srerr.Error(), "duplicate key value") {
 			context.Logger.Info("Duplicate key exists in session rel table%v", srerr)
 			return srerr
 		} else {
@@ -205,11 +222,13 @@ func (util *DbUtil) WithinRange(context utilities.AppContext, Db *dbconnector.Db
 	time.Sleep(5 * time.Second)
 	ercount, ceerr := util.CheckCount(context, Db, "amf_event", startdate, enddate)
 	if ceerr != nil {
+		context.Logger.Warn("WithinRange: CheckCount(amf_event) failed: %v", ceerr)
 	}
 	context.Logger.Info("Count from event table is: %v\n", ercount)
 	eventerr := util.InsertLastMonthHistory(context, Db, startdate, enddate, "amf_event_history")
 	if eventerr != nil {
-		if strings.Contains(err.Error(), "duplicate key value") {
+		// SEC-010 + nil-deref fix: see comment in session block above; use eventerr.Error()
+		if strings.Contains(eventerr.Error(), "duplicate key value") {
 			context.Logger.Info("Duplicate key exists in event table%v", eventerr)
 			return eventerr
 		} else {
@@ -223,6 +242,8 @@ func (util *DbUtil) WithinRange(context utilities.AppContext, Db *dbconnector.Db
 func (util *DbUtil) DeleteAll(context utilities.AppContext, Db *dbconnector.DbConnector, last14daydate string) error {
 	count, cmerr := util.CheckCount(context, Db, "amf_message", "", last14daydate)
 	if cmerr != nil {
+		// SEC-010: CheckCount is informational only; log + continue
+		context.Logger.Warn("DeleteAll: CheckCount(amf_message) failed: %v", cmerr)
 	}
 	context.Logger.Info("Count from message table is: %v\n", count)
 
@@ -234,6 +255,7 @@ func (util *DbUtil) DeleteAll(context utilities.AppContext, Db *dbconnector.DbCo
 
 	scount, cserr := util.CheckCount(context, Db, "amf_session", "", last14daydate)
 	if cserr != nil {
+		context.Logger.Warn("DeleteAll: CheckCount(amf_session) failed: %v", cserr)
 	}
 	context.Logger.Info("Count from session table is: %v\n", scount)
 
@@ -245,6 +267,7 @@ func (util *DbUtil) DeleteAll(context utilities.AppContext, Db *dbconnector.DbCo
 
 	srcount, csrerr := util.CheckCount(context, Db, "amf_session_rel", "", last14daydate)
 	if csrerr != nil {
+		context.Logger.Warn("DeleteAll: CheckCount(amf_session_rel) failed: %v", csrerr)
 	}
 	context.Logger.Info("Count from session relation table is: %v\n", srcount)
 	dsrerr := util.DeleteHistory(context, Db, "", last14daydate, "amf_session_rel")
@@ -255,6 +278,7 @@ func (util *DbUtil) DeleteAll(context utilities.AppContext, Db *dbconnector.DbCo
 
 	ercount, ceerr := util.CheckCount(context, Db, "amf_event", "", last14daydate)
 	if ceerr != nil {
+		context.Logger.Warn("DeleteAll: CheckCount(amf_event) failed: %v", ceerr)
 	}
 	context.Logger.Info("Count from event table is: %v\n", ercount)
 	deerr := util.DeleteHistory(context, Db, "", last14daydate, "amf_event")
@@ -268,6 +292,8 @@ func (util *DbUtil) DeleteAll(context utilities.AppContext, Db *dbconnector.DbCo
 func (util *DbUtil) DeleteWithinRange(context utilities.AppContext, Db *dbconnector.DbConnector, last14daydate, presentDate string) error {
 	count, cmerr := util.CheckCount(context, Db, "amf_message", last14daydate, presentDate)
 	if cmerr != nil {
+		// SEC-010: CheckCount is informational only; log + continue
+		context.Logger.Warn("DeleteWithinRange: CheckCount(amf_message) failed: %v", cmerr)
 	}
 	context.Logger.Info("Count from message table is: %v\n", count)
 	dmerr := util.DeleteHistory(context, Db, last14daydate, presentDate, "amf_message")
@@ -277,6 +303,7 @@ func (util *DbUtil) DeleteWithinRange(context utilities.AppContext, Db *dbconnec
 	}
 	scount, cserr := util.CheckCount(context, Db, "amf_session", last14daydate, presentDate)
 	if cserr != nil {
+		context.Logger.Warn("DeleteWithinRange: CheckCount(amf_session) failed: %v", cserr)
 	}
 	context.Logger.Info("Count from session table is: %v\n", scount)
 	dserr := util.DeleteHistory(context, Db, last14daydate, presentDate, "amf_session")
@@ -287,6 +314,7 @@ func (util *DbUtil) DeleteWithinRange(context utilities.AppContext, Db *dbconnec
 
 	srcount, csrerr := util.CheckCount(context, Db, "amf_session_rel", last14daydate, presentDate)
 	if csrerr != nil {
+		context.Logger.Warn("DeleteWithinRange: CheckCount(amf_session_rel) failed: %v", csrerr)
 	}
 	context.Logger.Info("Count from session relation table is: %v\n", srcount)
 	dsrerr := util.DeleteHistory(context, Db, last14daydate, presentDate, "amf_session_rel")
@@ -297,6 +325,7 @@ func (util *DbUtil) DeleteWithinRange(context utilities.AppContext, Db *dbconnec
 
 	ercount, ceerr := util.CheckCount(context, Db, "amf_event", last14daydate, presentDate)
 	if ceerr != nil {
+		context.Logger.Warn("DeleteWithinRange: CheckCount(amf_event) failed: %v", ceerr)
 	}
 	context.Logger.Info("Count from event table is: %v\n", ercount)
 	deerr := util.DeleteHistory(context, Db, last14daydate, presentDate, "amf_event")
@@ -325,18 +354,23 @@ func (util *DbUtil) ValidateAll(context utilities.AppContext, Db *dbconnector.Db
 	}
 	count, cmerr := util.CheckCount(context, Db, tablename, "", last14daydate)
 	if cmerr != nil {
+		// SEC-010: ValidateAll counts are informational; log + continue
+		context.Logger.Warn("ValidateAll: CheckCount(%v) failed: %v", tablename, cmerr)
 	}
 	context.Logger.Info("Count from %v table is: %v\n", tablename, count)
 	count1, cmerr := util.CheckCount(context, Db, sessiontable, "", last14daydate)
 	if cmerr != nil {
+		context.Logger.Warn("ValidateAll: CheckCount(%v) failed: %v", sessiontable, cmerr)
 	}
 	context.Logger.Info("Count from %v table is: %v\n", sessiontable, count1)
 	count2, cmerr := util.CheckCount(context, Db, sessionreltable, "", last14daydate)
 	if cmerr != nil {
+		context.Logger.Warn("ValidateAll: CheckCount(%v) failed: %v", sessionreltable, cmerr)
 	}
 	context.Logger.Info("Count from %v table is: %v\n", sessionreltable, count2)
 	count3, cmerr := util.CheckCount(context, Db, eventtable, "", last14daydate)
 	if cmerr != nil {
+		context.Logger.Warn("ValidateAll: CheckCount(%v) failed: %v", eventtable, cmerr)
 	}
 	context.Logger.Info("Count from %v table is: %v\n", eventtable, count3)
 	util.CheckDistinctSenderWithCount(context, Db, tablename, "", last14daydate)
@@ -362,18 +396,23 @@ func (util *DbUtil) ValidateWithinRange(context utilities.AppContext, Db *dbconn
 	}
 	count, cmerr := util.CheckCount(context, Db, tablename, startdate, enddate)
 	if cmerr != nil {
+		// SEC-010: ValidateWithinRange counts are informational; log + continue
+		context.Logger.Warn("ValidateWithinRange: CheckCount(%v) failed: %v", tablename, cmerr)
 	}
 	context.Logger.Info("Count from message table is: %v\n", count)
 	count1, cmerr := util.CheckCount(context, Db, sessiontable, startdate, enddate)
 	if cmerr != nil {
+		context.Logger.Warn("ValidateWithinRange: CheckCount(%v) failed: %v", sessiontable, cmerr)
 	}
 	context.Logger.Info("Count from %v table is: %v\n", sessiontable, count1)
 	count2, cmerr := util.CheckCount(context, Db, sessionreltable, startdate, enddate)
 	if cmerr != nil {
+		context.Logger.Warn("ValidateWithinRange: CheckCount(%v) failed: %v", sessionreltable, cmerr)
 	}
 	context.Logger.Info("Count from %v table is: %v\n", sessionreltable, count2)
 	count3, cmerr := util.CheckCount(context, Db, eventtable, startdate, enddate)
 	if cmerr != nil {
+		context.Logger.Warn("ValidateWithinRange: CheckCount(%v) failed: %v", eventtable, cmerr)
 	}
 	context.Logger.Info("Count from %v table is: %v\n", eventtable, count3)
 	util.CheckDistinctSenderWithCount(context, Db, tablename, startdate, enddate)
