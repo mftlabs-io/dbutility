@@ -68,22 +68,30 @@ func (util *DbUtil) PrepareQuery(context utilities.AppContext, Db *dbconnector.D
 	} else if validatemain && utilitytype == "all" {
 		err := util.ValidateAll(context, Db, fromdate, "main")
 		if err != nil {
-
+			// SEC-010: silent failure left the CLI looking like a no-op; propagate so the operator sees it
+			context.Logger.Warn("PrepareQuery: ValidateAll(main, fromdate=%v) failed: %v", fromdate, err)
+			return err
 		}
 	} else if validatemain && utilitytype == "" {
 		err := util.ValidateWithinRange(context, Db, startdate, enddate, "main")
 		if err != nil {
-
+			// SEC-010: silent failure left the CLI looking like a no-op; propagate so the operator sees it
+			context.Logger.Warn("PrepareQuery: ValidateWithinRange(main, %v..%v) failed: %v", startdate, enddate, err)
+			return err
 		}
 	} else if validatehistory && utilitytype == "all" {
 		err := util.ValidateAll(context, Db, fromdate, "history")
 		if err != nil {
-
+			// SEC-010: silent failure left the CLI looking like a no-op; propagate so the operator sees it
+			context.Logger.Warn("PrepareQuery: ValidateAll(history, fromdate=%v) failed: %v", fromdate, err)
+			return err
 		}
 	} else if validatehistory && utilitytype == "" {
 		err := util.ValidateWithinRange(context, Db, startdate, enddate, "history")
 		if err != nil {
-
+			// SEC-010: silent failure left the CLI looking like a no-op; propagate so the operator sees it
+			context.Logger.Warn("PrepareQuery: ValidateWithinRange(history, %v..%v) failed: %v", startdate, enddate, err)
+			return err
 		}
 	}
 
