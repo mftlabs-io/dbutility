@@ -108,7 +108,7 @@ func (util *DbUtil) DeleteHistory(context utilities.AppContext, Db *dbconnector.
 
 func (util *DbUtil) InsertToHistoryTable(context utilities.AppContext, Db *dbconnector.DbConnector, then string, tablename string) error {
 	if tablename == "amf_message_history" {
-		Query := INSERT_INTO_MESSAGE_HISTORY + SELECT_MESSAGES + " where create_time <= $1"
+		Query := INSERT_INTO_MESSAGE_HISTORY + SELECT_MESSAGES + " where create_time <= $1 on conflict do nothing"
 		context.Logger.Info("Insert query for %v is: %v\n", tablename, Query)
 		resp, err := Db.Exec(Query, then)
 		if err != nil {
@@ -117,7 +117,7 @@ func (util *DbUtil) InsertToHistoryTable(context utilities.AppContext, Db *dbcon
 		rowcount, _ := resp.RowsAffected()
 		context.Logger.Info("response for adding data to %v is: %v\n", tablename, rowcount)
 	} else if tablename == "amf_session_history" {
-		Query := INSERT_INTO_SESSION_HISTORY + SELECT_SESSIONS + " where create_time <= $1"
+		Query := INSERT_INTO_SESSION_HISTORY + SELECT_SESSIONS + " where create_time <= $1 on conflict do nothing"
 		context.Logger.Info("Insert query for %v is: %v\n", tablename, Query)
 		resp, err := Db.Exec(Query, then)
 		if err != nil {
@@ -126,7 +126,7 @@ func (util *DbUtil) InsertToHistoryTable(context utilities.AppContext, Db *dbcon
 		rowcount, _ := resp.RowsAffected()
 		context.Logger.Info("response for adding data to %v is: %v\n", tablename, rowcount)
 	} else if tablename == "amf_session_rel_history" {
-		Query := INSERT_INTO_SESSION_REL_HISTORY + SELECT_SESSION_REL + " where create_time <= $1"
+		Query := INSERT_INTO_SESSION_REL_HISTORY + SELECT_SESSION_REL + " where create_time <= $1 on conflict do nothing"
 		context.Logger.Info("Insert query for %v is: %v\n", tablename, Query)
 		resp, err := Db.Exec(Query, then)
 		if err != nil {
@@ -135,7 +135,7 @@ func (util *DbUtil) InsertToHistoryTable(context utilities.AppContext, Db *dbcon
 		rowcount, _ := resp.RowsAffected()
 		context.Logger.Info("response for adding data to %v is: %v\n", tablename, rowcount)
 	} else if tablename == "amf_event_history" {
-		Query := INSERT_INTO_EVENT_HISTORY + SELECT_EVENT + " where create_time <= $1"
+		Query := INSERT_INTO_EVENT_HISTORY + SELECT_EVENT + " where create_time <= $1 on conflict do nothing"
 		context.Logger.Info("Insert query for %v is: %v\n", tablename, Query)
 		resp, err := Db.Exec(Query, then)
 		if err != nil {
@@ -150,7 +150,7 @@ func (util *DbUtil) InsertToHistoryTable(context utilities.AppContext, Db *dbcon
 func (util *DbUtil) InsertLastMonthHistory(context utilities.AppContext, Db *dbconnector.DbConnector, last14daydate, presentDate, tablename string) error {
 	if tablename == "amf_message_history" {
 		whereClause := " where create_time >= $1 and create_time <= $2"
-		Query := INSERT_INTO_MESSAGE_HISTORY + SELECT_MESSAGES + whereClause
+		Query := INSERT_INTO_MESSAGE_HISTORY + SELECT_MESSAGES + whereClause + " on conflict do nothing"
 		context.Logger.Info("Insert query for %v is: %v\n", tablename, Query)
 		resp, err := Db.Exec(Query, last14daydate, presentDate)
 		if err != nil {
@@ -160,7 +160,7 @@ func (util *DbUtil) InsertLastMonthHistory(context utilities.AppContext, Db *dbc
 		context.Logger.Info("response for adding data to %v is: %v\n", tablename, rowcount)
 	} else if tablename == "amf_session_history" {
 		whereClause := " where create_time >= $1 and create_time <= $2"
-		Query := INSERT_INTO_SESSION_HISTORY + SELECT_SESSIONS + whereClause
+		Query := INSERT_INTO_SESSION_HISTORY + SELECT_SESSIONS + whereClause + " on conflict do nothing"
 		context.Logger.Info("Insert query for %v is: %v\n", tablename, Query)
 		resp, err := Db.Exec(Query, last14daydate, presentDate)
 		if err != nil {
@@ -170,7 +170,7 @@ func (util *DbUtil) InsertLastMonthHistory(context utilities.AppContext, Db *dbc
 		context.Logger.Info("response for adding data to %v is: %v\n", tablename, rowcount)
 	} else if tablename == "amf_session_rel_history" {
 		whereClause := " where create_time >= $1 and create_time <= $2"
-		Query := INSERT_INTO_SESSION_REL_HISTORY + SELECT_SESSION_REL + whereClause
+		Query := INSERT_INTO_SESSION_REL_HISTORY + SELECT_SESSION_REL + whereClause + " on conflict do nothing"
 		context.Logger.Info("Insert query for %v is: %v\n", tablename, Query)
 		resp, err := Db.Exec(Query, last14daydate, presentDate)
 		if err != nil {
@@ -180,7 +180,7 @@ func (util *DbUtil) InsertLastMonthHistory(context utilities.AppContext, Db *dbc
 		context.Logger.Info("response for adding data to %v is: %v\n", tablename, rowcount)
 	} else if tablename == "amf_event_history" {
 		whereClause := " where create_time >= $1 and create_time <= $2"
-		Query := INSERT_INTO_EVENT_HISTORY + SELECT_EVENT + whereClause
+		Query := INSERT_INTO_EVENT_HISTORY + SELECT_EVENT + whereClause + " on conflict do nothing"
 		context.Logger.Info("Insert query for %v is: %v\n", tablename, Query)
 		resp, err := Db.Exec(Query, last14daydate, presentDate)
 		if err != nil {

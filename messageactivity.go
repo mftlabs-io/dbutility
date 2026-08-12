@@ -3,6 +3,7 @@ package dbutility
 import (
 	"amfui/dbconnector"
 	"amfui/utilities"
+	"strings"
 	"time"
 )
 
@@ -93,6 +94,13 @@ func (util *DbUtil) RangeAll(context utilities.AppContext, Db *dbconnector.DbCon
 	for _, table := range archiveOrder {
 		err := util.MoveToHistory(context, Db, "", last14daydate, table)
 		if err != nil {
+			// ON CONFLICT DO NOTHING already skips duplicate rows; if a
+			// duplicate error still surfaces, skip this table and keep
+			// archiving the rest instead of aborting the whole run.
+			if strings.Contains(err.Error(), "duplicate key value") {
+				context.Logger.Warn("duplicate key when moving %v to history; skipping this table, rows remain in %v for next run: %v", table, table, err)
+				continue
+			}
 			context.Logger.Info("error when moving %v records to history table%v", table, err)
 			return err
 		}
@@ -106,6 +114,13 @@ func (util *DbUtil) WithinRange(context utilities.AppContext, Db *dbconnector.Db
 	for _, table := range archiveOrder {
 		err := util.MoveToHistory(context, Db, startdate, enddate, table)
 		if err != nil {
+			// ON CONFLICT DO NOTHING already skips duplicate rows; if a
+			// duplicate error still surfaces, skip this table and keep
+			// archiving the rest instead of aborting the whole run.
+			if strings.Contains(err.Error(), "duplicate key value") {
+				context.Logger.Warn("duplicate key when moving %v to history; skipping this table, rows remain in %v for next run: %v", table, table, err)
+				continue
+			}
 			context.Logger.Info("error when moving %v records to history table%v", table, err)
 			return err
 		}
